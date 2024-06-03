@@ -16,7 +16,7 @@ saveFolderName = "chargeDefectPlots"
 if not os.path.exists(saveFolderName):
     os.mkdir(saveFolderName)
 
-testFile = pd.read_csv(r"./testFile.csv")
+testFile = pd.read_csv(r"./energies_final.csv")
 
 #Energy per Atom of Elements
 elementNames = ["Rb", "Sb", "I"]

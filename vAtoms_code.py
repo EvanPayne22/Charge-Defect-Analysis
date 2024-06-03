@@ -15,7 +15,7 @@ if not os.path.exists("vAtomsImages"):
     os.mkdir("vAtomsImages")
 
 data = pd.read_csv(r".\vAtoms_output.csv").astype(str)
-finalFile = pd.read_csv(r"./correctionEnergies.csv")
+finalFile = pd.read_csv(r"./energies_correction.csv")
 
 column1 = []
 column2 = []

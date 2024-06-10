@@ -1,0 +1,37 @@
+target: Rb3Sb2I9
+A:
+  chem_pot:
+    I: -0.02413
+    Rb: -3.10387
+    Sb: -1.36804
+  competing_phases:
+  - RbI3
+  - SbI3
+  impurity_phases: []
+B:
+  chem_pot:
+    I: -0.07315
+    Rb: -2.95681
+    Sb: -1.36804
+  competing_phases:
+  - RbI
+  - RbI3
+  impurity_phases: []
+C:
+  chem_pot:
+    I: -0.48014
+    Rb: -2.64786
+    Sb: -0.0
+  competing_phases:
+  - Sb
+  - SbI3
+  impurity_phases: []
+D:
+  chem_pot:
+    I: -0.52916
+    Rb: -2.5008
+    Sb: -0.0
+  competing_phases:
+  - RbI
+  - Sb
+  impurity_phases: []

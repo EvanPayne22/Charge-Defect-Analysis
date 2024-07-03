@@ -12,11 +12,13 @@ do
 	newName="$defectName"_"$a"
 	mkdir $newName
 	cp $directoryName/CONTCAR $newName/POSCAR
+ 	#job.vasp6 is a run file so edit that to match your submission script
 	cp job.vasp6 INCAR POTCAR KPOINTS $newName
 	cd $newName
 	#Generates number of electrons for charge defect
 	newCharge=$(($electrons - $a))
 	echo "NELECT = $newCharge" >> INCAR
-	#qsub job.vasp6
+	#Add the correct script to run vasp
+ 	#qsub job.vasp6
 	cd ..
 done

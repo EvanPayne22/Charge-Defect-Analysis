@@ -3,6 +3,9 @@
 Created on Fri Jun  7 17:23:00 2024
 
 @author: evanp
+========================================================================================
+Input: VASP POSCAR formatted file "POSCAR" in the directory in which this code is run
+Output:  Generates POSCAR files in seperate folders for Vacancy and Substitutional defects
 """
 
 import math

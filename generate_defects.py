@@ -13,7 +13,7 @@ import os
 from sympy import *
 from sympy.solvers import solve
 
-poscar = r"./128Relaxed"
+poscar = r"./POSCAR"
 
 f = open(poscar)
 POSCAR = f.readlines()

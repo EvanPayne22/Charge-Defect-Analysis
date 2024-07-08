@@ -9,6 +9,28 @@ import numpy as np
 import pandas as pd
 import os
 import yaml
+import argparse
+
+parser = argparse.ArgumentParser(description="Arguments for charge defect ",
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("-plotsingledefect", nargs='?', default = False, help="plots the vAtoms plots")
+parser.add_argument("-plotvatoms", nargs='?', default = False, help="plots the vAtoms plots")
+parser.add_argument("-poscar", nargs='?', default = "./POSCAR", help="poscar file location")
+parser.add_argument("-vatoms", nargs='?', default = "./vAtoms_output.csv", help="vatoms file location")
+parser.add_argument("-correction", nargs='?', default = "./correctionEnergies.csv", help="energies and defect names file location")
+parser.add_argument("-chempot", nargs='?', default = "./target_vertices.yaml", help="chemical potential file location (.yaml)")
+parser.add_argument("-ymax", nargs='?', default = 7, help="ymax for defect graph")
+parser.add_argument("-xmax", nargs='?', default = -3, help="xmax for defect graph")
+parser.add_argument("-ymin", nargs='?', default = -7, help="ymin for defect graph")
+parser.add_argument("-xmin", nargs='?', default = 0, help="xmin for defect graph")
+parser.add_argument("bg", type=float, help="Band Gap")
+parser.add_argument("fermi", type=float, help="Fermi Energy")
+parser.add_argument("resen", nargs=3, type=float, help="energy per atom of bulk atomsin same order as yaml file")
+args = parser.parse_args()
+config = vars(args)
+
+if(config['xmax'] == -3):
+    config['xmax'] = config['bg']
 
 # Folder Name of Save Location for charge defect plots
 saveFolderNameCharge = "chargeDefectPlots"
@@ -24,22 +46,28 @@ if not os.path.exists(saveFolderNameVAtoms):
 
 #Insert all files below
 #vAtoms Data
-data = pd.read_csv(r".\vAtoms_output.csv").astype(str)
+data = pd.read_csv(config["vatoms"]).astype(str)
 #Initial Energies Data
-finalFile = pd.read_csv(r"./correctionEnergies.csv")
+finalFile = pd.read_csv(config["correction"])
 #Chem Potentials File
-with open(r'.\target_vertices.yaml', 'r') as file:
+with open(config["chempot"], 'r') as file:
     data2 = yaml.safe_load(file)
+
+poscar = config["poscar"]
+
+f = open(poscar)
+POSCAR = f.readlines()
+
+elementNames = POSCAR[5].split()
+print(elementNames)
 
 # Enter energies per atom of elements in the same order as yaml file
 # ex. would go I, Rb, Sb for my material
-reservoirEnergies = [-1.51496087, -0.988139613, -4.06064045]
+reservoirEnergies = config["resen"]
+#-1.84406847/2, -5.51085172/8, -7.89207833/2
 
-#Place these in same order as vAtoms File
-elementNames = ['Rb', 'Sb', 'I']
-
-E_f = 1.713596 # Fermi Energy (eV)
-gap = 1.813 # Band Gap (eV)
+E_f = config['fermi'] # Fermi Energy (eV)
+gap = config['bg'] # Band Gap (eV)
 stepSize = 0.01 # Size of Fermi Energy Step (eV)
 iterations = gap/stepSize
 
@@ -48,10 +76,10 @@ fermiEnergies = []
 # For graph of all defects on one plot
 
 # Plot Settings
-ylimmax = 7
-ylimmin = -9
-xlimmax = gap
-xlimmin = 0
+ylimmax = config['ymax']
+ylimmin = config['ymin']
+xlimmax = config['xmax']
+xlimmin = config['xmin']
 
 column1 = []
 column2 = []
@@ -84,17 +112,18 @@ while(start <= len(data) - 2):
     
     #Everything here is used to plot/save the plot
     
-    # plt.figure(figsize=(10,6))
-    # plt.title(title)
-    # plt.xlabel("Radial Distance (bohr)")
-    # plt.ylabel("Energy (eV)")
-    # plt.scatter(column1, column2, label = "V(long-range)")
-    # plt.scatter(column1, column3, label = "V(defect)-V(ref)")
-    # plt.scatter(column1, column4, label = "V(defect)-V(ref)-V(long-range)")
-    # plt.legend(loc = 'upper left')
-    # saveLocation = saveFolderNameVAtoms + "/" + str(title) + ".png"
-    # plt.savefig(saveLocation)
-    # plt.show()
+    if(config["plotvatoms"] == True):
+        plt.figure(figsize=(10,6))
+        plt.title(title)
+        plt.xlabel("Radial Distance (bohr)")
+        plt.ylabel("Energy (eV)")
+        plt.scatter(column1, column2, label = "V(long-range)")
+        plt.scatter(column1, column3, label = "V(defect)-V(ref)")
+        plt.scatter(column1, column4, label = "V(defect)-V(ref)-V(long-range)")
+        plt.legend(loc = 'upper left')
+        saveLocation = saveFolderNameVAtoms + "/" + str(title) + ".png"
+        plt.savefig(saveLocation)
+        plt.show()
     
     dict = {'distance': column1, 'values': column4}
     sortedData = pd.DataFrame(dict, dtype=float)
@@ -157,7 +186,7 @@ finalFile.to_csv('energies_final.csv', index = False)
 
 del (elementNames, charges, defectNames, column1, column2, column3, column4, last10, start, newName, i, j, title, nameTracker, excelFile)
 
-energies_final = pd.read_csv(r".\energies_final.csv")
+energies_final = pd.read_csv(r"./energies_final.csv")
 
 bulkEnergy = float(energies_final.iloc[0,2])
 
@@ -209,13 +238,13 @@ numOfElements = len(tempArray)
 
 del (i, j, tempArray, tempValue)
 
-for i in range(0, int(len(elements)/numOfElements)):
+for p in range(0, int(len(elements)/numOfElements)):
     elementNames = []
     elementEPA = []
     
     for j in range(0, numOfElements):
-        elementNames.append(str(elements[3*i + j]))
-        elementEPA.append(float(chemPot[3*i + j]) + reservoirEnergies[j])
+        elementNames.append(str(elements[3*p + j]))
+        elementEPA.append(float(chemPot[3*p + j]) + reservoirEnergies[j])
     
     print(elementNames)
     print(elementEPA)
@@ -251,12 +280,10 @@ for i in range(0, int(len(elements)/numOfElements)):
             # Subtract Energy From "Added" Element
             if(firstElement == elementNames[k]):
                 finalDefectEnergy = finalDefectEnergy - elementEPA[k]
-                print(elementNames[k])
             
             # Add Energy From "Subtracted" Element
             if(secondElement == elementNames[k]):
                 finalDefectEnergy = finalDefectEnergy + elementEPA[k]
-                print(elementNames[k])
         q = int(energies_final.iloc[i, 1])
         V = float(energies_final.iloc[i, 4])
         correction = float(energies_final.iloc[i, 3])
@@ -279,17 +306,18 @@ for i in range(0, int(len(elements)/numOfElements)):
                  tempArray = []
                 
              #Plots the individual charge defect plots
-             # formattedTitle = format_label(str(storedName))
-             # plt.figure(figsize=(10,6))
-             # plt.title("Defect Plot of " + formattedTitle)
-             # plt.xlabel("Fermi Energy (eV)")
-             # plt.ylabel("Defect Energy (eV)")
-             # plt.plot(fermiEnergies, forGraph)
-             # plt.xlim(xlimmin, xlimmax)
-             # plt.ylim(ylimmin, ylimmax)
-             # saveLocation = saveFolderNameCharge + "/" + str(storedName) + ".png"
-             # plt.savefig(saveLocation)
-             # plt.show()
+             if(config["plotsingledefect"] == True): 
+                 formattedTitle = format_label(str(storedName))
+                 plt.figure(figsize=(10,6))
+                 plt.title("Defect Plot of " + formattedTitle)
+                 plt.xlabel("Fermi Energy (eV)")
+                 plt.ylabel("Defect Energy (eV)")
+                 plt.plot(fermiEnergies, forGraph)
+                 plt.xlim(xlimmin, xlimmax)
+                 plt.ylim(ylimmin, ylimmax)
+                 saveLocation = saveFolderNameCharge + "/" + str(storedName) + ".png"
+                 plt.savefig(saveLocation)
+                 plt.show()
             
              namesArray.append(storedName)
              storedName = defectName
@@ -320,20 +348,21 @@ for i in range(0, int(len(elements)/numOfElements)):
     storedName = defectName
     namesArray.append(storedName)
     
-    # formattedTitle = format_label(str(storedName))
-    # plt.title("Defect Plot of " + formattedTitle)
-    # plt.xlabel("Fermi Energy (eV)")
-    # plt.ylabel("Defect Energy (eV)")
-    # plt.plot(fermiEnergies, forGraph, label = str(q))
-    # plt.xlim(xlimmin, xlimmax)
-    # plt.ylim(ylimmin, ylimmax)
-    # saveLocation = saveFolderNameCharge + "/" + str(storedName) + ".png"
-    # plt.savefig(saveLocation)
-    # plt.show()
+    if(config["plotsingledefect"] == True): 
+        formattedTitle = format_label(str(storedName))
+        plt.title("Defect Plot of " + formattedTitle)
+        plt.xlabel("Fermi Energy (eV)")
+        plt.ylabel("Defect Energy (eV)")
+        plt.plot(fermiEnergies, forGraph, label = str(q))
+        plt.xlim(xlimmin, xlimmax)
+        plt.ylim(ylimmin, ylimmax)
+        saveLocation = saveFolderNameCharge + "/" + str(storedName) + ".png"
+        plt.savefig(saveLocation)
+        plt.show()
 
     numberOfDefects = int(len(completeGraph)/len(fermiEnergies))
 
-    plt.figure(figsize=(3.5,6))
+    plt.figure(figsize=(4,7))
     plt.title("Charge Defect Plot")
     plt.xlabel("Fermi Energy (eV)")
     plt.ylabel("Defect Energy (eV)")
@@ -351,11 +380,14 @@ for i in range(0, int(len(elements)/numOfElements)):
         plt.plot(fermiEnergies, tempData, label=formatted_labels[i])
 
     plt.legend()
-    saveLocation = saveFolderNameCharge + "/" + "combinedDefects.png"
+    saveLocation = saveFolderNameCharge + "/" +  "combinedDefects" +  str(p + 1) + ".png"
     plt.savefig(saveLocation)
     plt.show()
     
-    del (elementNames, elementEPA, completeGraph, namesArray)
+    namesArray = []
+    storedName = energies_final.iloc[1,0]
+    
+    #del (elementNames, elementEPA, completeGraph, namesArray)
 
 del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameCharge, tempData, tempArray, 
     V, xlimmax, xlimmin, ylimmax, ylimmin, standardDeviation, secondElement, firstElement, formatted_labels, file,

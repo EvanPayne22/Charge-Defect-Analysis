@@ -171,7 +171,8 @@ for i in range (8, len(POSCAR)):
 
 if((POSCAR[7].strip()).lower() == "direct"):
     POSCAR = convertToCartesian(POSCAR)
-    POSCAR[7] = "Cartesian"
+    
+POSCAR[7] = "Direct"
 
 for i in range (8, len(POSCAR)):
     avgx = avgx + float(POSCAR[i][0])

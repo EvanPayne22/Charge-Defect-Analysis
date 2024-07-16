@@ -6,8 +6,8 @@ directoryName="$defectName"_0
 #Gets the number of electrons in nuetral charge state 
 electrons=$(grep NELECT $directoryName/OUTCAR | awk '{printf "%0.f\n", $3}')
 
-#Write needed charge states
-for a in {1..2} -1 -2
+#Write needed charge states (do not include 0 since that charge state is already generated)
+for a in {1..2} {-2..-1}
 do
 	newName="$defectName"_"$a"
 	mkdir $newName

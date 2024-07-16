@@ -13,19 +13,21 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Arguments for charge defect ",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("-plotsingledefect", nargs='?', default = False, help="plots the vAtoms plots")
-parser.add_argument("-plotvatoms", nargs='?', default = False, help="plots the vAtoms plots")
+parser.add_argument("-plotsingledefect", nargs='?', type=bool, default = False, help="plots the vAtoms plots")
+parser.add_argument("-plotvatoms", nargs='?', type=bool, default = False, help="plots the vAtoms plots")
 parser.add_argument("-poscar", nargs='?', default = "./POSCAR", help="poscar file location")
 parser.add_argument("-vatoms", nargs='?', default = "./vAtoms_output.csv", help="vatoms file location")
-parser.add_argument("-correction", nargs='?', default = "./correctionEnergies.csv", help="energies and defect names file location")
+parser.add_argument("-correction", nargs='?', default = "./energies_correction.csv", help="energies and defect names file location")
 parser.add_argument("-chempot", nargs='?', default = "./target_vertices.yaml", help="chemical potential file location (.yaml)")
-parser.add_argument("-ymax", nargs='?', default = 7, help="ymax for defect graph")
-parser.add_argument("-xmax", nargs='?', default = -3, help="xmax for defect graph")
-parser.add_argument("-ymin", nargs='?', default = -7, help="ymin for defect graph")
-parser.add_argument("-xmin", nargs='?', default = 0, help="xmin for defect graph")
+parser.add_argument("-ymax", nargs='?', type=float, default = 7, help="ymax for defect graph")
+parser.add_argument("-xmax", nargs='?', type=float, default = -3, help="xmax for defect graph")
+parser.add_argument("-ymin", nargs='?', type=float, default = -7, help="ymin for defect graph")
+parser.add_argument("-xmin", nargs='?', type=float, default = 0, help="xmin for defect graph")
+parser.add_argument("-percent", nargs='?', type=float, default = 0.8, help="value to determine amount of atoms averaged for delta v value using all atoms beyond specifed percent of furthest atom")
+parser.add_argument("-number", nargs='?', type=int, default = -1, help="value to determine amount of atoms averaged for delta v value using the furthest specified number of atoms")
 parser.add_argument("bg", type=float, help="Band Gap")
-parser.add_argument("fermi", type=float, help="Fermi Energy")
-parser.add_argument("resen", nargs=3, type=float, help="energy per atom of bulk atomsin same order as yaml file")
+parser.add_argument("vbm", type=float, help="VBM Offset")
+parser.add_argument("resen", nargs=3, type=float, help="energy per atom of bulk atoms in same order as yaml file")
 args = parser.parse_args()
 config = vars(args)
 
@@ -66,7 +68,7 @@ print(elementNames)
 reservoirEnergies = config["resen"]
 #-1.84406847/2, -5.51085172/8, -7.89207833/2
 
-E_f = config['fermi'] # Fermi Energy (eV)
+E_f = config['vbm'] # Fermi Energy (eV)
 gap = config['bg'] # Band Gap (eV)
 stepSize = 0.01 # Size of Fermi Energy Step (eV)
 iterations = gap/stepSize
@@ -86,6 +88,7 @@ column2 = []
 column3 = []
 column4 = []
 standardDeviation = []
+allDev = [0]
 
 #sets delta V for bulk to 0, note: bulk must be in first slot otherwise formatting will be messed up
 excelFile = [0]
@@ -110,10 +113,43 @@ while(start <= len(data) - 2):
     
     title = "vAtoms for " + defect_name
     
+    dict = {'distance': column1, 'values': column4}
+    sortedData = pd.DataFrame(dict, dtype=float)
+    sortedData = sortedData.sort_values(by = "distance", ascending = False)
+    
+    if(config["number"] < 0):
+        minDistance = float(sortedData.iloc[0,0] * config["percent"])
+        
+        i = 0
+        
+        while(float(sortedData.iloc[i,0]) > minDistance):
+            last10 = last10 + float(sortedData.iloc[i,1])
+            standardDeviation.append(float(sortedData.iloc[i,1]))
+            i = i + 1
+        
+        delV = last10/i
+    else:
+        value = config["number"] - 1
+        minDistance = float(sortedData.iloc[value,0])
+               
+        for a in range(0, config["number"]):
+            last10 = last10 + float(sortedData.iloc[a,1])
+            standardDeviation.append(float(sortedData.iloc[a,1]))
+            
+            i = a
+        
+        delV = last10/config["number"]
+    
     #Everything here is used to plot/save the plot
     
     if(config["plotvatoms"] == True):
+        ymin = -0.3
+        ymax = 0.3
+        xmin = 0
+        xmax = sortedData.iloc[0,0] + 1 
         plt.figure(figsize=(10,6))
+        plt.plot([sortedData.iloc[i,0], xmax], [delV, delV], color = 'black', linestyle = "dashed")
+        plt.plot([sortedData.iloc[i,0], sortedData.iloc[i,0]], [ymin, delV], color = 'black', linestyle = "dashed")
         plt.title(title)
         plt.xlabel("Radial Distance (bohr)")
         plt.ylabel("Energy (eV)")
@@ -124,21 +160,16 @@ while(start <= len(data) - 2):
         saveLocation = saveFolderNameVAtoms + "/" + str(title) + ".png"
         plt.savefig(saveLocation)
         plt.show()
-    
-    dict = {'distance': column1, 'values': column4}
-    sortedData = pd.DataFrame(dict, dtype=float)
-    sortedData = sortedData.sort_values(by = "distance", ascending = False)
-    
-    for i in range(0, 10):
-        last10 = last10 + float(sortedData.iloc[i,1])
-        standardDeviation.append(float(sortedData.iloc[i,1]))
         
     #Formats line to print nicely Note: prints element name and delta V value
-    line_new = '{:<12}  {:>6}'.format(defect_name, str(round(last10/10,5)))
+    line_new = '{:<12}  {:>6}'.format(defect_name, str(round(delV, 5)))
+        
     print(line_new)
     print(np.std(standardDeviation))
     
-    excelFile.append(last10/10)
+    allDev.append(np.std(standardDeviation))
+       
+    excelFile.append(delV)
     column1 = []
     column2 = []
     column3 = []
@@ -182,6 +213,7 @@ finalFile = finalFile.drop(finalFile.columns[0], axis = 1)
 finalFile.insert(0, "Defect Name", defectNames, True)
 finalFile.insert(1, "Charge", charges, True)    
 finalFile.insert(4, "delta V", excelFile, True)
+finalFile.insert(5, "Std Deviation", allDev, True)
 finalFile.to_csv('energies_final.csv', index = False)
 
 del (elementNames, charges, defectNames, column1, column2, column3, column4, last10, start, newName, i, j, title, nameTracker, excelFile)
@@ -239,6 +271,7 @@ numOfElements = len(tempArray)
 del (i, j, tempArray, tempValue)
 
 for p in range(0, int(len(elements)/numOfElements)):
+    oldIndex = 0
     elementNames = []
     elementEPA = []
     
@@ -288,11 +321,6 @@ for p in range(0, int(len(elements)/numOfElements)):
         V = float(energies_final.iloc[i, 4])
         correction = float(energies_final.iloc[i, 3])
         
-        # Account for Charge Defect and Correction Values
-        finalDefectEnergy = finalDefectEnergy + q*(E_f + V) + correction
-        energy = '{:<12}  {:>6}'.format(defectName + "_" + str(q), str(round(finalDefectEnergy,5)))
-        print(energy)
-        
         if(storedName != defectName and i != 1):
              tempArray = [] 
              forGraph = []
@@ -302,6 +330,14 @@ for p in range(0, int(len(elements)/numOfElements)):
                  for n in range (0, count):
                      tempArray.append(graphValues[m + int(len(graphValues)/count)*n])
                  forGraph.append(min(tempArray))
+                 
+                 newIndex = tempArray.index(min(tempArray))
+                     
+                 if (newIndex != oldIndex):
+                     oldIndex = newIndex
+                     if(m != 0):
+                         print(fermiEnergies[m])
+                                                  
                  completeGraph.append(forGraph[m])
                  tempArray = []
                 
@@ -326,6 +362,11 @@ for p in range(0, int(len(elements)/numOfElements)):
              graphValues = []
              count = 0
         
+        # Account for Charge Defect and Correction Values
+        finalDefectEnergy = finalDefectEnergy + q*(E_f + V) + correction
+        energy = '{:<12}  {:>6}'.format(defectName + "_" + str(q), str(round(finalDefectEnergy,5)))
+        print(energy)
+        
         # Everything Below is for plotting defect energy vs fermi energy
         for k in range(0, int(iterations)):
             graphValues.append(finalDefectEnergy + q*stepSize*k) # Adds the total fermi energy multiplied by charge
@@ -340,6 +381,14 @@ for p in range(0, int(len(elements)/numOfElements)):
         for n in range (0, count):
             tempArray.append(graphValues[m + int(len(graphValues)/count)*n])
         forGraph.append(min(tempArray))
+        
+        newIndex = tempArray.index(min(tempArray))
+            
+        if (newIndex != oldIndex):
+            oldIndex = newIndex
+            if(m != 0):
+                print(fermiEnergies[m])
+        
         completeGraph.append(forGraph[m])
         tempArray = []
 
@@ -389,7 +438,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     
     #del (elementNames, elementEPA, completeGraph, namesArray)
 
-del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameCharge, tempData, tempArray, 
+del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameCharge, tempData, tempArray, f, parser,
     V, xlimmax, xlimmin, ylimmax, ylimmin, standardDeviation, secondElement, firstElement, formatted_labels, file,
     saveLocation, stepSize, storedName, m, n, q, forGraph, sortedData, correction, charge, count, energy, fermiEnergies,
-    finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms)
+    finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms, allDev, delV, oldIndex, newIndex, p, namesArray, minDistance)

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #========================================================================================
 #Input: directory that contains defect directories, defect directories must contain vAtoms.dat from sxdefectalign
 #Output:  file that contains all vAtoms information (vAtoms_output.csv)

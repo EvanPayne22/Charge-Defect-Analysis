@@ -1,5 +1,11 @@
 #!/bin/bash
-  
+
+#========================================================================================
+#Input: directory that contains defect directories, in the code, enter in correct column numbers on line 28
+# and also enter in correct bulk directory as well as correct dielectric tensor
+#Output:  enerigies_correction.csv and sxdefetalign output files
+#========================================================================================
+ 
 #Get Directories
 directories=$(ls -d */)
 
@@ -11,7 +17,6 @@ bulk="../latticeRelax/"
 free_en=$(grep TOTEN "$bulk"OUTCAR | tail -1 | awk '{printf $5}')
 
 echo "bulk, $free_en, 0" >> ./energies_correction.csv
-
 
 for a in $directories
 do

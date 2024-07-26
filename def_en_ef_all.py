@@ -3,6 +3,10 @@
 Created on Wed Mar 27 17:32:06 2024
 
 @author: evanp
+========================================================================================
+Input: energies_final.csv from vAtoms_code.csv
+Output: Charge defect plot for individual defects that includes all charge state lines
+========================================================================================
 """
 
 import matplotlib.pyplot as plt

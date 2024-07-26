@@ -3,6 +3,10 @@
 Created on Wed Feb 14 15:38:29 2024
 
 @author: evanp
+========================================================================================
+Input: vAtoms_output.csv and energies_correction.csv, additionally parser arguments explained below
+Output: energies_final.csv that contains deltaV values and standard deviation
+========================================================================================
 """
 
 import matplotlib.pyplot as plt

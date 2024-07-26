@@ -3,6 +3,10 @@
 Created on Wed Mar 27 17:32:06 2024
 
 @author: evanp
+========================================================================================
+Input: energies_final.csv from vAtoms_code.py
+Output: Charge Defect Plot with all defects at all specified point in elementEPA array
+========================================================================================
 """
 
 import matplotlib.pyplot as plt

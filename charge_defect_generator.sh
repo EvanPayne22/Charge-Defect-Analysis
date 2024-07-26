@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#Input: Directory with neutral charge state defect
+#Output: Directories of specified run states with desired NELECT in INCAR
+
 #Enter in defect name
 defectName="Rb_i1"
 directoryName="$defectName"_0

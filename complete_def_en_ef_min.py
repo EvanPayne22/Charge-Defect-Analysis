@@ -3,6 +3,10 @@
 Created on Fri Jun  7 13:15:19 2024
 
 @author: evanp
+========================================================================================
+Input: vAtoms_output.csv, target_vertices.yaml, energies_correction.csv
+Output: Charge Defect Plot with all defects at all specified points in .yaml file -- Optional: vAtoms plots and single defect plots
+========================================================================================
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,14 +58,6 @@ finalFile = pd.read_csv(config["correction"])
 #Chem Potentials File
 with open(config["chempot"], 'r') as file:
     data2 = yaml.safe_load(file)
-
-poscar = config["poscar"]
-
-f = open(poscar)
-POSCAR = f.readlines()
-
-elementNames = POSCAR[5].split()
-print(elementNames)
 
 # Enter energies per atom of elements in the same order as yaml file
 # ex. would go I, Rb, Sb for my material

@@ -1,3 +1,8 @@
+#========================================================================================
+#Input: directory that contains defect directories, defect directories must contain vAtoms.dat from sxdefectalign
+#Output:  file that contains all vAtoms information (vAtoms_output.csv)
+#========================================================================================
+
 directories=$(ls -d */)
 
 rm -f ./vAtoms_output.csv 
@@ -9,7 +14,7 @@ do
 	cd $a
 	if [ -e "./vAtoms.dat" ]
 	then
-		echo "stop,$a" >> ../Atoms_output.csv
+		echo "stop,$a" >> ../vAtoms_output.csv
 		awk '{print $1 "," $2 "," $3 "," $4 "," $5}' vAtoms.dat >> ../vAtoms_output.csv
 	fi
 	cd ..

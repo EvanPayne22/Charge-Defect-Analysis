@@ -272,8 +272,8 @@ for p in range(0, int(len(elements)/numOfElements)):
     elementEPA = []
     
     for j in range(0, numOfElements):
-        elementNames.append(str(elements[3*p + j]))
-        elementEPA.append(float(chemPot[3*p + j]) + reservoirEnergies[j])
+        elementNames.append(str(elements[numOfElements*p + j]))
+        elementEPA.append(float(chemPot[numOfElements*p + j]) + reservoirEnergies[j])
     
     print(elementNames)
     print(elementEPA)

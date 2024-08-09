@@ -29,9 +29,10 @@ parser.add_argument("-ymin", nargs='?', type=float, default = -7, help="ymin for
 parser.add_argument("-xmin", nargs='?', type=float, default = 0, help="xmin for defect graph")
 parser.add_argument("-percent", nargs='?', type=float, default = 0.8, help="value to determine amount of atoms averaged for delta v value using all atoms beyond specifed percent of furthest atom")
 parser.add_argument("-number", nargs='?', type=int, default = -1, help="value to determine amount of atoms averaged for delta v value using the furthest specified number of atoms")
+parser.add_argument("-hse", nargs=2, type=float, help="enter in values for band gap and VBM for HSE calculation to generate PBE 'prediction'")
 parser.add_argument("bg", type=float, help="Band Gap")
 parser.add_argument("vbm", type=float, help="VBM Offset")
-parser.add_argument("resen", nargs=3, type=float, help="energy per atom of bulk atoms in same order as yaml file")
+parser.add_argument("resen", nargs='+', type=float, help="energy per atom of bulk atoms in same order as yaml file")
 args = parser.parse_args()
 config = vars(args)
 
@@ -59,6 +60,14 @@ finalFile = pd.read_csv(config["correction"])
 with open(config["chempot"], 'r') as file:
     data2 = yaml.safe_load(file)
 
+poscar = config["poscar"]
+
+f = open(poscar)
+POSCAR = f.readlines()
+
+elementNames = POSCAR[5].split()
+print(elementNames)
+
 # Enter energies per atom of elements in the same order as yaml file
 # ex. would go I, Rb, Sb for my material
 reservoirEnergies = config["resen"]
@@ -66,6 +75,16 @@ reservoirEnergies = config["resen"]
 
 E_f = config['vbm'] # Fermi Energy (eV)
 gap = config['bg'] # Band Gap (eV)
+
+if(config["hse"] != None):
+    originalVBM = E_f
+    originalGap = gap
+    
+    E_f = config["hse"][1]
+    gap = config["hse"][0]
+    
+    config['xmax'] = gap
+    
 stepSize = 0.01 # Size of Fermi Energy Step (eV)
 iterations = gap/stepSize
 
@@ -156,6 +175,7 @@ while(start <= len(data) - 2):
         saveLocation = saveFolderNameVAtoms + "/" + str(title) + ".png"
         plt.savefig(saveLocation)
         plt.show()
+        plt.close()
         
     #Formats line to print nicely Note: prints element name and delta V value
     line_new = '{:<12}  {:>6}'.format(defect_name, str(round(delV, 5)))
@@ -272,8 +292,8 @@ for p in range(0, int(len(elements)/numOfElements)):
     elementEPA = []
     
     for j in range(0, numOfElements):
-        elementNames.append(str(elements[numOfElements*p + j]))
-        elementEPA.append(float(chemPot[numOfElements*p + j]) + reservoirEnergies[j])
+        elementNames.append(str(elements[3*p + j]))
+        elementEPA.append(float(chemPot[3*p + j]) + reservoirEnergies[j])
     
     print(elementNames)
     print(elementEPA)
@@ -407,12 +427,16 @@ for p in range(0, int(len(elements)/numOfElements)):
 
     numberOfDefects = int(len(completeGraph)/len(fermiEnergies))
 
-    plt.figure(figsize=(4,7))
+    plt.figure(figsize=(5,7))
     plt.title("Charge Defect Plot")
     plt.xlabel("Fermi Energy (eV)")
     plt.ylabel("Defect Energy (eV)")
     plt.xlim(xlimmin, xlimmax)
     plt.ylim(ylimmin, ylimmax)
+    
+    if(config["hse"] != None):
+        plt.fill([xlimmin, xlimmin, originalVBM - E_f, originalVBM - E_f], [ylimmin, ylimmax, ylimmax, ylimmin], color = "silver")
+        plt.fill([xlimmax, xlimmax, xlimmax - (gap - originalGap), xlimmax - (gap - originalGap)], [ylimmin, ylimmax, ylimmax, ylimmin], color = "silver")
 
     # Format the labels in namesArray
     formatted_labels = [format_label(label) for label in namesArray]
@@ -424,7 +448,7 @@ for p in range(0, int(len(elements)/numOfElements)):
         
         plt.plot(fermiEnergies, tempData, label=formatted_labels[i])
 
-    plt.legend()
+    plt.legend(loc = 8, ncols = 2)
     saveLocation = saveFolderNameCharge + "/" +  "combinedDefects" +  str(p + 1) + ".png"
     plt.savefig(saveLocation)
     plt.show()

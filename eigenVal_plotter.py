@@ -6,8 +6,8 @@ Created on Tue Jun 25 15:07:04 2024
 """
 
 """
-Code to plot defect levels across the band gap. Manually enter in the Band Energy and Occupancy from the EIGENVAL file from the VBM to CMB. Follow the formatting as see in eigenVal.csv
-If the occupancy is 0.5, write the band energies of each electron after running a spin polarized calculation. Example is given in eigenVal.csv
+Code to plot defect levels across the band gap. Manually enter in the Band Energy and Occupancy from the EIGENVAL file from the VBM to CMB. Follow the formatting as see in eigenVal.txt
+If the occupancy is 0.5, write the band energies of each electron after running a spin polarized calculation. Example is given in eigenVal.txt
 """
 
 import matplotlib.pyplot as plt

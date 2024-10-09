@@ -14,12 +14,13 @@ import pandas as pd
 import os
 import yaml
 import argparse
+import math
 
 parser = argparse.ArgumentParser(description="Arguments for charge defect ",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-plotsingledefect", nargs='?', type=bool, default = False, help="plots the vAtoms plots")
 parser.add_argument("-plotvatoms", nargs='?', type=bool, default = False, help="plots the vAtoms plots")
-parser.add_argument("-poscar", nargs='?', default = "./POSCAR", help="poscar file location")
+parser.add_argument("-poscar", nargs='?', default = "./POSCAR", help="poscar file location, POSCAR is used to determine number of defect sites so use a version that includes all defects you are looking at")
 parser.add_argument("-vatoms", nargs='?', default = "./vAtoms_output.csv", help="vatoms file location")
 parser.add_argument("-correction", nargs='?', default = "./energies_correction.csv", help="energies and defect names file location")
 parser.add_argument("-chempot", nargs='?', default = "./target_vertices.yaml", help="chemical potential file location (.yaml)")
@@ -65,8 +66,17 @@ poscar = config["poscar"]
 f = open(poscar)
 POSCAR = f.readlines()
 
-elementNames = POSCAR[5].split()
-print(elementNames)
+elementNamesSeperate = POSCAR[5].split()
+print(elementNamesSeperate)
+
+defectSites = POSCAR[6].split()
+for i in range(0, len(defectSites)):
+    defectSites[i] = int(defectSites[i])
+
+factor = math.gcd(*defectSites)
+
+for i in range(0, len(defectSites)):
+    defectSites[i] = defectSites[i]/factor
 
 # Enter energies per atom of elements in the same order as yaml file
 # ex. would go I, Rb, Sb for my material
@@ -85,10 +95,11 @@ if(config["hse"] != None):
     
     config['xmax'] = gap
     
-stepSize = 0.01 # Size of Fermi Energy Step (eV)
+stepSize = 0.0001 # Size of Fermi Energy Step (eV)
 iterations = gap/stepSize
 
 graphValues = []
+minCharge = []
 fermiEnergies = []
 # For graph of all defects on one plot
 
@@ -158,11 +169,13 @@ while(start <= len(data) - 2):
     #Everything here is used to plot/save the plot
     
     if(config["plotvatoms"] == True):
-        ymin = -0.3
-        ymax = 0.3
+        ymin = -0.4
+        ymax = 0.4
         xmin = 0
         xmax = sortedData.iloc[0,0] + 1 
         plt.figure(figsize=(10,6))
+        plt.xlim(xmin, xmax)
+        plt.ylim(ymin, ymax)
         plt.plot([sortedData.iloc[i,0], xmax], [delV, delV], color = 'black', linestyle = "dashed")
         plt.plot([sortedData.iloc[i,0], sortedData.iloc[i,0]], [ymin, delV], color = 'black', linestyle = "dashed")
         plt.title(title)
@@ -232,7 +245,7 @@ finalFile.insert(4, "delta V", excelFile, True)
 finalFile.insert(5, "Std Deviation", allDev, True)
 finalFile.to_csv('energies_final.csv', index = False)
 
-del (elementNames, charges, defectNames, column1, column2, column3, column4, last10, start, newName, i, j, title, nameTracker, excelFile)
+del (charges, defectNames, column1, column2, column3, column4, last10, start, newName, i, j, title, nameTracker, excelFile)
 
 energies_final = pd.read_csv(r"./energies_final.csv")
 
@@ -246,6 +259,9 @@ for i in range(0, int(iterations)):
    
 # Gets the name of the first defect for plots
 storedName = energies_final.iloc[1,0]
+
+# Variable for determining number of spots
+oldElement = " " 
 
 # Function to format labels with subscript
 def format_label(label):
@@ -274,6 +290,8 @@ del (x, y, z, counter1, counter2)
 numOfElements = 0
 tempArray = []
 tempValue = 0
+allValues = []
+allCharges = []
 
 for i in range (0,len(elements)):
     for j in range (0, len(tempArray)):
@@ -300,6 +318,8 @@ for p in range(0, int(len(elements)/numOfElements)):
     
     completeGraph = []
     namesArray = []
+    completeMinCharge = []
+    defectSpots = []
     
     for i in range (1, len(energies_final)):
         bulkDefectEnergy = float(energies_final.iloc[i,2])
@@ -321,7 +341,10 @@ for p in range(0, int(len(elements)/numOfElements)):
         while(j != len(defectName)):
             secondElement = secondElement + defectName[j]
             j = j + 1
-
+            
+        if(oldElement == " "):
+            oldElement = secondElement
+        
         finalDefectEnergy = bulkDefectEnergy - bulkEnergy 
         
         # Calculates 
@@ -338,24 +361,37 @@ for p in range(0, int(len(elements)/numOfElements)):
         correction = float(energies_final.iloc[i, 3])
         
         if(storedName != defectName and i != 1):
-             tempArray = [] 
+             tempArray = []
+             tempChargeArray = []
              forGraph = []
+             forCharge = []
+             
+             for n in range (0, len(graphValues)):
+                 allValues.append(graphValues[n])
+                 allCharges.append(minCharge[n])
              
              # Appends minimum defect energy at each fermi energy
              for m in range (0, int(len(graphValues)/count)):
                  for n in range (0, count):
                      tempArray.append(graphValues[m + int(len(graphValues)/count)*n])
+                     tempChargeArray.append(minCharge[m + int(len(minCharge)/count)*n])
                  forGraph.append(min(tempArray))
                  
+                         
                  newIndex = tempArray.index(min(tempArray))
+                 
+                 forCharge.append(tempChargeArray[newIndex])
+                 defectSpots.append(oldElement)
                      
                  if (newIndex != oldIndex):
                      oldIndex = newIndex
                      if(m != 0):
-                         print(fermiEnergies[m])
+                         print("Transition from", forCharge[m - 1], "to", forCharge[m], "at", round(fermiEnergies[m], 5), "eV")
                                                   
                  completeGraph.append(forGraph[m])
+                 completeMinCharge.append(forCharge[m])
                  tempArray = []
+                 tempChargeArray = []
                 
              #Plots the individual charge defect plots
              if(config["plotsingledefect"] == True): 
@@ -373,9 +409,11 @@ for p in range(0, int(len(elements)/numOfElements)):
             
              namesArray.append(storedName)
              storedName = defectName
+             oldElement = secondElement
              
              # Clear Graph Values
              graphValues = []
+             minCharge = []
              count = 0
         
         # Account for Charge Defect and Correction Values
@@ -386,27 +424,39 @@ for p in range(0, int(len(elements)/numOfElements)):
         # Everything Below is for plotting defect energy vs fermi energy
         for k in range(0, int(iterations)):
             graphValues.append(finalDefectEnergy + q*stepSize*k) # Adds the total fermi energy multiplied by charge
+            minCharge.append(q)
         
         count = count + 1
 
     # Erases temporary data for last graph
     tempArray = [] 
     forGraph = []
-
+    forCharge = []
+    
+    for n in range (0, len(graphValues)):
+        allValues.append(graphValues[n])
+        allCharges.append(minCharge[n])
+    
     for m in range (0, int(len(graphValues)/count)):
         for n in range (0, count):
             tempArray.append(graphValues[m + int(len(graphValues)/count)*n])
+            tempChargeArray.append(minCharge[m + int(len(minCharge)/count)*n])
         forGraph.append(min(tempArray))
         
         newIndex = tempArray.index(min(tempArray))
-            
+        
+        forCharge.append(tempChargeArray[newIndex])
+        defectSpots.append(oldElement)
+        
         if (newIndex != oldIndex):
             oldIndex = newIndex
             if(m != 0):
-                print(fermiEnergies[m])
+                print("Transition from", forCharge[m - 1], "to", forCharge[m], "at", round(fermiEnergies[m], 5), "eV")
         
         completeGraph.append(forGraph[m])
+        completeMinCharge.append(forCharge[m])
         tempArray = []
+        tempChargeArray = []
 
     # This plots the last individual defect
     plt.figure(figsize=(10,6))
@@ -428,11 +478,69 @@ for p in range(0, int(len(elements)/numOfElements)):
     numberOfDefects = int(len(completeGraph)/len(fermiEnergies))
 
     plt.figure(figsize=(5,7))
-    plt.title("Charge Defect Plot")
+    # plt.title("Charge Defect Plot")
     plt.xlabel("Fermi Energy (eV)")
     plt.ylabel("Defect Energy (eV)")
     plt.xlim(xlimmin, xlimmax)
     plt.ylim(ylimmin, ylimmax)
+    
+    
+    temp1 = []
+    temp2 = 0
+    temp3 = []
+    temp4 = []
+    sign1 = False
+    sign2 = False
+    Q = 0
+    Q1 = 0
+    oldQ = -1
+    oldQ1 = -1
+    k = 1
+    T = 1/20
+    e = 2.718
+    qArray = []
+    
+    #Determines intrinsic fermi level of defects
+    for i in range(0, int(iterations)):
+        qArray = []
+        temp2 = float("{:0.2f}".format(fermiEnergies[i]))
+        for j in range(0, numberOfDefects):
+            temp1.append("{:0.3f}".format(completeGraph[i + j*int(iterations)]))
+            temp3.append(completeMinCharge[i + j*int(iterations)])
+            temp4.append(defectSpots[i + j*int(iterations)])
+            
+            q_i = int(temp3[j])
+            
+            for k in range(0, len(elementNames)):
+                # Subtract Energy From "Added" Element
+                if(temp4[j] == elementNamesSeperate[k]):
+                    N_i = defectSites[k]
+            
+            Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (k*T)))
+            
+            
+        
+        qArray.append(Q)
+                
+        if(Q > 0):
+            sign1 = True
+        else:
+            sign1 = False
+        
+        if(i != 0 and sign2 != sign1):
+            print("Intrinisc Fermi Defect Level: " + str(temp2) + " eV")
+            qValue = temp2
+            break
+        
+        sign2 = sign1
+        
+        temp1 = []
+        temp3 = []
+        temp4 = []
+        Q = 0
+        
+        
+        
     
     if(config["hse"] != None):
         plt.fill([xlimmin, xlimmin, originalVBM - E_f, originalVBM - E_f], [ylimmin, ylimmax, ylimmax, ylimmin], color = "silver")
@@ -447,7 +555,8 @@ for p in range(0, int(len(elements)/numOfElements)):
             tempData.append(completeGraph[i*len(fermiEnergies) + j])
         
         plt.plot(fermiEnergies, tempData, label=formatted_labels[i])
-
+    
+    plt.axvline(qValue, color="black", linestyle="dashed")
     plt.legend(loc = 8, ncols = 2)
     saveLocation = saveFolderNameCharge + "/" +  "combinedDefects" +  str(p + 1) + ".png"
     plt.savefig(saveLocation)
@@ -455,10 +564,13 @@ for p in range(0, int(len(elements)/numOfElements)):
     
     namesArray = []
     storedName = energies_final.iloc[1,0]
+    oldElement = " "
     
     #del (elementNames, elementEPA, completeGraph, namesArray)
 
 del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameCharge, tempData, tempArray, f, parser,
     V, xlimmax, xlimmin, ylimmax, ylimmin, standardDeviation, secondElement, firstElement, formatted_labels, file,
     saveLocation, stepSize, storedName, m, n, q, forGraph, sortedData, correction, charge, count, energy, fermiEnergies,
-    finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms, allDev, delV, oldIndex, newIndex, p, namesArray, minDistance)
+    finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms, allDev, delV, oldIndex, newIndex, p, namesArray, minDistance,
+    completeGraph, completeMinCharge,  defectSpots, e, factor, forCharge, graphValues, minCharge, N_i, oldElement, oldQ, Q, q_i, qArray,
+    sign1, sign2, tempChargeArray, temp1, temp2, temp3, temp4, T)

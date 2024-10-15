@@ -184,7 +184,7 @@ while(start <= len(data) - 2):
         plt.scatter(column1, column2, label = "V(long-range)")
         plt.scatter(column1, column3, label = "V(defect)-V(ref)")
         plt.scatter(column1, column4, label = "V(defect)-V(ref)-V(long-range)")
-        plt.legend(loc = 'upper left')
+        plt.legend(loc = 'upper right')
         saveLocation = saveFolderNameVAtoms + "/" + str(title) + ".png"
         plt.savefig(saveLocation)
         plt.show()

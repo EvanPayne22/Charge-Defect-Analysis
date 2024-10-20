@@ -28,6 +28,10 @@ parser.add_argument("-ymax", nargs='?', type=float, default = 7, help="ymax for 
 parser.add_argument("-xmax", nargs='?', type=float, default = -3, help="xmax for defect graph")
 parser.add_argument("-ymin", nargs='?', type=float, default = -7, help="ymin for defect graph")
 parser.add_argument("-xmin", nargs='?', type=float, default = 0, help="xmin for defect graph")
+parser.add_argument("-vatomsymax", nargs='?', type=float, default = -100, help="ymax for vatoms graph")
+parser.add_argument("-vatomsxmax", nargs='?', type=float, default = -100, help="xmax for vatoms graph")
+parser.add_argument("-vatomsymin", nargs='?', type=float, default = -100, help="ymin for vatoms graph")
+parser.add_argument("-vatomsxmin", nargs='?', type=float, default = -100, help="xmin for vatoms graph")
 parser.add_argument("-percent", nargs='?', type=float, default = 0.8, help="value to determine amount of atoms averaged for delta v value using all atoms beyond specifed percent of furthest atom")
 parser.add_argument("-number", nargs='?', type=int, default = -1, help="value to determine amount of atoms averaged for delta v value using the furthest specified number of atoms")
 parser.add_argument("-hse", nargs=2, type=float, help="enter in values for band gap and VBM for HSE calculation to generate PBE 'prediction'")
@@ -169,21 +173,41 @@ while(start <= len(data) - 2):
     #Everything here is used to plot/save the plot
     
     if(config["plotvatoms"] == True):
-        ymin = -0.4
-        ymax = 0.4
-        xmin = 0
-        xmax = sortedData.iloc[0,0] + 1 
+        
         plt.figure(figsize=(10,6))
-        plt.xlim(xmin, xmax)
-        plt.ylim(ymin, ymax)
-        plt.plot([sortedData.iloc[i,0], xmax], [delV, delV], color = 'black', linestyle = "dashed")
-        plt.plot([sortedData.iloc[i,0], sortedData.iloc[i,0]], [ymin, delV], color = 'black', linestyle = "dashed")
+        
         plt.title(title)
         plt.xlabel("Radial Distance (bohr)")
         plt.ylabel("Energy (eV)")
         plt.scatter(column1, column2, label = "V(long-range)")
         plt.scatter(column1, column3, label = "V(defect)-V(ref)")
         plt.scatter(column1, column4, label = "V(defect)-V(ref)-V(long-range)")
+        
+        if(config["vatomsxmin"] != -100):
+            xmin = config["vatomsxmin"]
+        else:
+            xmin = 0
+        
+        if(config["vatomsxmax"] != -100):
+            xmax = config["vatomsxmax"]
+        else:
+            xmax = sortedData.iloc[0,0] + 1
+            
+        if(config["vatomsymin"] != -100):
+            ymin = config["vatomsymin"]
+        else:
+            ymin = plt.ylim()[0]
+
+        if(config["vatomsymax"] != -100):
+            ymax = config["vatomsymax"]
+        else:
+            ymax = plt.ylim()[1]
+            
+        plt.xlim(xmin, xmax)
+        plt.ylim(ymin, ymax)
+        plt.plot([sortedData.iloc[i,0], xmax], [delV, delV], color = 'black', linestyle = "dashed")
+        plt.plot([sortedData.iloc[i,0], sortedData.iloc[i,0]], [ymin, delV], color = 'black', linestyle = "dashed")
+        
         plt.legend(loc = 'upper right')
         saveLocation = saveFolderNameVAtoms + "/" + str(title) + ".png"
         plt.savefig(saveLocation)

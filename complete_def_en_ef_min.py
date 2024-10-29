@@ -455,6 +455,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     # Erases temporary data for last graph
     tempArray = [] 
     forGraph = []
+    tempChargeArray = []
     forCharge = []
     
     for n in range (0, len(graphValues)):

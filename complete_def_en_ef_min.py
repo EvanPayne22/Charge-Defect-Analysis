@@ -582,7 +582,8 @@ for p in range(0, int(len(elements)/numOfElements)):
         plt.plot(fermiEnergies, tempData, label=formatted_labels[i])
     
     plt.axvline(qValue, color="black", linestyle="dashed")
-    plt.legend(loc = 8, ncols = 2)
+    colNum = math.ceil(numberOfDefects/7)
+    plt.legend(loc = 8, ncols = colNum)
     saveLocation = saveFolderNameCharge + "/" +  "combinedDefects" +  str(p + 1) + ".png"
     plt.savefig(saveLocation)
     plt.show()

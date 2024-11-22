@@ -87,6 +87,8 @@ for i in range(0, len(defectSites)):
 reservoirEnergies = config["resen"]
 #-1.84406847/2, -5.51085172/8, -7.89207833/2
 
+colors = ["red", "green", "blue", "orange"]
+lineStyles = ["solid", (0, (5, 7)), "dotted", "dashed"]
 E_f = config['vbm'] # Fermi Energy (eV)
 gap = config['bg'] # Band Gap (eV)
 
@@ -316,6 +318,8 @@ tempArray = []
 tempValue = 0
 allValues = []
 allCharges = []
+colorName = []
+finalColorNames = []
 
 for i in range (0,len(elements)):
     for j in range (0, len(tempArray)):
@@ -332,6 +336,10 @@ for p in range(0, int(len(elements)/numOfElements)):
     oldIndex = 0
     elementNames = []
     elementEPA = []
+    
+    lineStyleCount = []
+    for i in range (0, len(colors)):
+        lineStyleCount.append(0)
     
     for j in range(0, numOfElements):
         elementNames.append(str(elements[3*p + j]))
@@ -390,6 +398,25 @@ for p in range(0, int(len(elements)/numOfElements)):
              forGraph = []
              forCharge = []
              
+             qw = 0
+             feColor = ""
+             while(storedName[qw] != "_"):
+                 feColor = feColor + storedName[qw]
+                 qw += 1
+                 
+             colorName.append(feColor)
+             
+             if(len(finalColorNames) == 0):
+                 finalColorNames.append(feColor)
+             
+             for bb in range (0, len(finalColorNames)):
+                 if(feColor == finalColorNames[bb]):
+                     break
+                 elif(bb == len(finalColorNames) - 1):
+                     finalColorNames.append(feColor)
+             
+             del(feColor, qw)
+             
              for n in range (0, len(graphValues)):
                  allValues.append(graphValues[n])
                  allCharges.append(minCharge[n])
@@ -398,7 +425,7 @@ for p in range(0, int(len(elements)/numOfElements)):
              for m in range (0, int(len(graphValues)/count)):
                  for n in range (0, count):
                      tempArray.append(graphValues[m + int(len(graphValues)/count)*n])
-                     tempChargeArray.append(minCharge[m + int(len(minCharge)/count)*n])
+                     tempChargeArray.append(minCharge  [m + int(len(minCharge)/count)*n])
                  forGraph.append(min(tempArray))
                  
                          
@@ -455,8 +482,26 @@ for p in range(0, int(len(elements)/numOfElements)):
     # Erases temporary data for last graph
     tempArray = [] 
     forGraph = []
-    tempChargeArray = []
     forCharge = []
+    
+    qw = 0
+    feColor = ""
+    while(storedName[qw] != "_"):
+        feColor = feColor + storedName[qw]
+        qw += 1
+        
+    colorName.append(feColor)
+    
+    if(len(finalColorNames) == 0):
+        finalColorNames.append(feColor)
+    
+    for bb in range (0, len(finalColorNames)):
+        if(feColor == finalColorNames[bb]):
+            break
+        elif(bb == len(finalColorNames) - 1):
+            finalColorNames.append(feColor)
+    
+    del(feColor, qw)
     
     for n in range (0, len(graphValues)):
         allValues.append(graphValues[n])
@@ -536,13 +581,12 @@ for p in range(0, int(len(elements)/numOfElements)):
             
             q_i = int(temp3[j])
             
-            for k in range(0, len(elementNames)):
+            for k in range(0, len(elementNamesSeperate)):
                 # Subtract Energy From "Added" Element
                 if(temp4[j] == elementNamesSeperate[k]):
                     N_i = defectSites[k]
             
             Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (k*T)))
-            
             
         
         qArray.append(Q)
@@ -569,7 +613,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     
     if(config["hse"] != None):
         plt.fill([xlimmin, xlimmin, originalVBM - E_f, originalVBM - E_f], [ylimmin, ylimmax, ylimmax, ylimmin], color = "silver")
-        plt.fill([xlimmax, xlimmax, xlimmax - (gap - originalGap), xlimmax - (gap - originalGap)], [ylimmin, ylimmax, ylimmax, ylimmin], color = "silver")
+        plt.fill([xlimmax, xlimmax, originalVBM - E_f + originalGap, originalVBM - E_f + originalGap], [ylimmin, ylimmax, ylimmax, ylimmin], color = "silver")
 
     # Format the labels in namesArray
     formatted_labels = [format_label(label) for label in namesArray]
@@ -579,8 +623,11 @@ for p in range(0, int(len(elements)/numOfElements)):
         for j in range (0, int(len(fermiEnergies))):
             tempData.append(completeGraph[i*len(fermiEnergies) + j])
         
-        plt.plot(fermiEnergies, tempData, label=formatted_labels[i])
-    
+        for j in range(0, len(finalColorNames)):
+            if(colorName[i] == finalColorNames[j]):
+        
+                plt.plot(fermiEnergies, tempData, label=formatted_labels[i], color = colors[j], linestyle = lineStyles[lineStyleCount[j] % len(lineStyles)])
+                lineStyleCount[j] = lineStyleCount[j] + 1
     plt.axvline(qValue, color="black", linestyle="dashed")
     colNum = math.ceil(numberOfDefects/7)
     plt.legend(loc = 8, ncols = colNum)
@@ -592,11 +639,14 @@ for p in range(0, int(len(elements)/numOfElements)):
     storedName = energies_final.iloc[1,0]
     oldElement = " "
     
-    #del (elementNames, elementEPA, completeGraph, namesArray)
+    colorName = []
+ 
+    del (elementNames, elementEPA, completeGraph, namesArray)
 
 del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameCharge, tempData, tempArray, f, parser,
     V, xlimmax, xlimmin, ylimmax, ylimmin, standardDeviation, secondElement, firstElement, formatted_labels, file,
     saveLocation, stepSize, storedName, m, n, q, forGraph, sortedData, correction, charge, count, energy, fermiEnergies,
-    finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms, allDev, delV, oldIndex, newIndex, p, namesArray, minDistance,
-    completeGraph, completeMinCharge,  defectSpots, e, factor, forCharge, graphValues, minCharge, N_i, oldElement, oldQ, Q, q_i, qArray,
-    sign1, sign2, tempChargeArray, temp1, temp2, temp3, temp4, T)
+    finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms, allDev, delV, oldIndex, newIndex, p, minDistance,
+    completeMinCharge,  defectSpots, e, factor, forCharge, graphValues, minCharge, N_i, oldElement, oldQ, Q, q_i, qArray,
+    sign1, sign2, tempChargeArray, temp1, temp2, temp3, T)
+

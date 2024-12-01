@@ -53,8 +53,9 @@ saveFolderNameVAtoms = "vAtomsImages"
 # Creates Folder if it does not exist
 if not os.path.exists(saveFolderNameCharge):
     os.mkdir(saveFolderNameCharge)
-if not os.path.exists(saveFolderNameVAtoms):
-    os.mkdir(saveFolderNameVAtoms)
+if(config["plotvatoms"]):
+  if not os.path.exists(saveFolderNameVAtoms):
+      os.mkdir(saveFolderNameVAtoms)
 
 #Insert all files below
 #vAtoms Data
@@ -640,6 +641,11 @@ for p in range(0, int(len(elements)/numOfElements)):
     oldElement = " "
     
     colorName = []
+
+    # Clear Graph Values
+    graphValues = []
+    minCharge = []
+    count = 0
  
     del (elementNames, elementEPA, completeGraph, namesArray)
 

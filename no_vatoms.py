@@ -466,6 +466,11 @@ for p in range(0, int(len(elements)/numOfElements)):
     oldElement = " "
     
     colorName = []
+
+    # Clear Graph Values
+    graphValues = []
+    minCharge = []
+    count = 0
     
     del (elementNames, elementEPA, completeGraph, namesArray)
 

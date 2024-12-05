@@ -62,7 +62,6 @@ while (i < len(eigenVal)):
             plt.scatter(0.25, filledState, color='black', zorder = 3, s = dotSize)
             plt.scatter(0.75, emptyState, facecolors='white', edgecolors='black', zorder = 3, s = dotSize)
             plt.plot([0.5,0.5], [filledState, emptyState], color = 'black', linestyle = 'dashed')
-            plt.savefig("eigenvalplot.png")
     
     plt.xlabel(title, fontsize = 12)
     plt.xlim(0,1)
@@ -75,4 +74,5 @@ while (i < len(eigenVal)):
     i = i + 1
     total = total + 1
 
+plt.savefig("eigenvalplot.png")
 plt.show()     

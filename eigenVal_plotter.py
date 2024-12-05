@@ -5,11 +5,6 @@ Created on Tue Jun 25 15:07:04 2024
 @author: evanp
 """
 
-"""
-Code to plot defect levels across the band gap. Manually enter in the Band Energy and Occupancy from the EIGENVAL file from the VBM to CMB. Follow the formatting as see in eigenVal.txt
-If the occupancy is 0.5, write the band energies of each electron after running a spin polarized calculation. Example is given in eigenVal.txt
-"""
-
 import matplotlib.pyplot as plt
 
 # Function to format labels with subscript
@@ -17,7 +12,7 @@ def format_label(label):
     base, subscript = label.split('_')
     return f"{base}$_{{{subscript}}}$"
 
-data = r"./eigenVal.csv"
+data = r"./eigenVal.txt"
 # data = r"./eigenVal2.csv"
 
 f = open(data)
@@ -67,6 +62,7 @@ while (i < len(eigenVal)):
             plt.scatter(0.25, filledState, color='black', zorder = 3, s = dotSize)
             plt.scatter(0.75, emptyState, facecolors='white', edgecolors='black', zorder = 3, s = dotSize)
             plt.plot([0.5,0.5], [filledState, emptyState], color = 'black', linestyle = 'dashed')
+            plt.savefig("eigenvalplot.png")
     
     plt.xlabel(title, fontsize = 12)
     plt.xlim(0,1)

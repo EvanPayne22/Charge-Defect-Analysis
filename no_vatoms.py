@@ -27,6 +27,7 @@ parser.add_argument("-ymax", nargs='?', type=float, default = 7, help="ymax for 
 parser.add_argument("-xmax", nargs='?', type=float, default = -3, help="xmax for defect graph")
 parser.add_argument("-ymin", nargs='?', type=float, default = -7, help="ymin for defect graph")
 parser.add_argument("-xmin", nargs='?', type=float, default = 0, help="xmin for defect graph")
+parser.add_argument("-testfe", nargs='?', type=float, default = -1, help="prints data about Q calculations at specified fermi level")
 parser.add_argument("-hse", nargs=2, type=float, help="enter in values for band gap and VBM for HSE calculation to generate PBE 'prediction'")
 parser.add_argument("bg", type=float, help="Band Gap")
 parser.add_argument("vbm", type=float, help="VBM Offset")
@@ -395,13 +396,12 @@ for p in range(0, int(len(elements)/numOfElements)):
     T = 1/20
     e = 2.718
     qArray = []
-    
     #Determines intrinsic fermi level of defects
     for i in range(0, int(iterations)):
         qArray = []
-        temp2 = float("{:0.2f}".format(fermiEnergies[i]))
+        temp2 = float("{:0.4f}".format(fermiEnergies[i]))
         for j in range(0, numberOfDefects):
-            temp1.append("{:0.3f}".format(completeGraph[i + j*int(iterations)]))
+            temp1.append("{:0.7f}".format(completeGraph[i + j*int(iterations)]))
             temp3.append(completeMinCharge[i + j*int(iterations)])
             temp4.append(defectSpots[i + j*int(iterations)])
             
@@ -411,9 +411,14 @@ for p in range(0, int(len(elements)/numOfElements)):
                 # Subtract Energy From "Added" Element
                 if(temp4[j] == elementNamesSeperate[k]):
                     N_i = defectSites[k]
-            
+                                                    
             Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (k*T)))
             
+            if(float(config['testfe']) == float("{:0.4f}".format(fermiEnergies[i]))):
+                print("charge state of defect", j, "=", q_i)
+                print("degeneracy states of defect", j, "=", N_i)
+                print("formation energy of defect", j, "=", temp1[j])
+                print()
         
         qArray.append(Q)
                 
@@ -423,9 +428,14 @@ for p in range(0, int(len(elements)/numOfElements)):
             sign1 = False
         
         if(i != 0 and sign2 != sign1):
-            print("Intrinisc Fermi Defect Level: " + str(temp2) + " eV")
+            print()
+            print("Intrinisc Fermi Defect Level: " + "{:0.4f}".format(temp2) + " eV")
+            print()
             qValue = temp2
-            break
+                    
+        if(config["testfe"] == float("{:0.4f}".format(fermiEnergies[i]))):
+            print("Q value =", Q)
+            print()
         
         sign2 = sign1
         
@@ -433,7 +443,6 @@ for p in range(0, int(len(elements)/numOfElements)):
         temp3 = []
         temp4 = []
         Q = 0
-        
         
         
     
@@ -466,11 +475,6 @@ for p in range(0, int(len(elements)/numOfElements)):
     oldElement = " "
     
     colorName = []
-
-    # Clear Graph Values
-    graphValues = []
-    minCharge = []
-    count = 0
     
     del (elementNames, elementEPA, completeGraph, namesArray)
 

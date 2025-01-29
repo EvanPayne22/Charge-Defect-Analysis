@@ -27,7 +27,7 @@ parser.add_argument("-ymax", nargs='?', type=float, default = 7, help="ymax for 
 parser.add_argument("-xmax", nargs='?', type=float, default = -3, help="xmax for defect graph")
 parser.add_argument("-ymin", nargs='?', type=float, default = -7, help="ymin for defect graph")
 parser.add_argument("-xmin", nargs='?', type=float, default = 0, help="xmin for defect graph")
-parser.add_argument("-testfe", nargs='?', type=float, default = -1, help="prints data about Q calculations at specified fermi level")
+parser.add_argument("-testfe", nargs='?', type=float, default = -1, help="displayes Q information at specified fermi energy")
 parser.add_argument("-hse", nargs=2, type=float, help="enter in values for band gap and VBM for HSE calculation to generate PBE 'prediction'")
 parser.add_argument("bg", type=float, help="Band Gap")
 parser.add_argument("vbm", type=float, help="VBM Offset")
@@ -392,8 +392,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     Q1 = 0
     oldQ = -1
     oldQ1 = -1
-    k = 1
-    T = 1/20
+    kT = 0.05
     e = 2.718
     qArray = []
     #Determines intrinsic fermi level of defects
@@ -412,7 +411,7 @@ for p in range(0, int(len(elements)/numOfElements)):
                 if(temp4[j] == elementNamesSeperate[k]):
                     N_i = defectSites[k]
                                                     
-            Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (k*T)))
+            Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (kT)))
             
             if(float(config['testfe']) == float("{:0.4f}".format(fermiEnergies[i]))):
                 print("charge state of defect", j, "=", q_i)
@@ -481,4 +480,4 @@ for p in range(0, int(len(elements)/numOfElements)):
 del(allCharges, allValues, args, bb, bulkDefectEnergy, chemPot, colNum, colorName, colors, completeMinCharge, config, correction, count, data2, defectName, defectSites, defectSpots, e, 
     elementNamesSeperate, elements, energies_final, energy, f, factor, fermiEnergies, file, finalColorNames, finalDefectEnergy, firstElement, forCharge, forGraph, 
     formatted_labels, graphValues, i, iterations, j, k, lineStyleCount, lineStyles, m, minCharge, n, N_i, newIndex, numOfElements, oldElement, oldIndex, oldQ, oldQ1, p, parser, poscar, POSCAR, q, Q, Q1, q_i,
-    qValue, qArray, saveFolderNameCharge, saveLocation, secondElement, sign1, sign2, storedName, T, temp1, temp2, temp3, temp4, tempArray, tempChargeArray, tempData, V, xlimmax, xlimmin, ylimmax, ylimmin)
+    qValue, qArray, saveFolderNameCharge, saveLocation, secondElement, sign1, sign2, storedName, kT, temp1, temp2, temp3, temp4, tempArray, tempChargeArray, tempData, V, xlimmax, xlimmin, ylimmax, ylimmin)

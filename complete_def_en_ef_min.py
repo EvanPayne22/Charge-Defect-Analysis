@@ -32,6 +32,7 @@ parser.add_argument("-vatomsymax", nargs='?', type=float, default = -100, help="
 parser.add_argument("-vatomsxmax", nargs='?', type=float, default = -100, help="xmax for vatoms graph")
 parser.add_argument("-vatomsymin", nargs='?', type=float, default = -100, help="ymin for vatoms graph")
 parser.add_argument("-vatomsxmin", nargs='?', type=float, default = -100, help="xmin for vatoms graph")
+parser.add_argument("-testfe", nargs='?', type=float, default = -1, help="displayes Q information at specified fermi energy")
 parser.add_argument("-percent", nargs='?', type=float, default = 0.8, help="value to determine amount of atoms averaged for delta v value using all atoms beyond specifed percent of furthest atom")
 parser.add_argument("-number", nargs='?', type=int, default = -1, help="value to determine amount of atoms averaged for delta v value using the furthest specified number of atoms")
 parser.add_argument("-hse", nargs=2, type=float, help="enter in values for band gap and VBM for HSE calculation to generate PBE 'prediction'")
@@ -53,9 +54,8 @@ saveFolderNameVAtoms = "vAtomsImages"
 # Creates Folder if it does not exist
 if not os.path.exists(saveFolderNameCharge):
     os.mkdir(saveFolderNameCharge)
-if(config["plotvatoms"]):
-  if not os.path.exists(saveFolderNameVAtoms):
-      os.mkdir(saveFolderNameVAtoms)
+if not os.path.exists(saveFolderNameVAtoms):
+    os.mkdir(saveFolderNameVAtoms)
 
 #Insert all files below
 #vAtoms Data
@@ -272,7 +272,7 @@ finalFile.insert(4, "delta V", excelFile, True)
 finalFile.insert(5, "Std Deviation", allDev, True)
 finalFile.to_csv('energies_final.csv', index = False)
 
-del (charges, defectNames, column1, column2, column3, column4, last10, start, newName, i, j, title, nameTracker, excelFile)
+del (defectNames, column1, column2, column3, column4, last10, start, newName, i, j, title, nameTracker, excelFile)
 
 energies_final = pd.read_csv(r"./energies_final.csv")
 
@@ -320,6 +320,7 @@ tempValue = 0
 allValues = []
 allCharges = []
 colorName = []
+degenArray = []
 finalColorNames = []
 
 for i in range (0,len(elements)):
@@ -566,17 +567,15 @@ for p in range(0, int(len(elements)/numOfElements)):
     Q1 = 0
     oldQ = -1
     oldQ1 = -1
-    k = 1
-    T = 1/20
+    kT = 0.05
     e = 2.718
     qArray = []
-    
     #Determines intrinsic fermi level of defects
     for i in range(0, int(iterations)):
         qArray = []
-        temp2 = float("{:0.2f}".format(fermiEnergies[i]))
+        temp2 = float("{:0.4f}".format(fermiEnergies[i]))
         for j in range(0, numberOfDefects):
-            temp1.append("{:0.3f}".format(completeGraph[i + j*int(iterations)]))
+            temp1.append("{:0.7f}".format(completeGraph[i + j*int(iterations)]))
             temp3.append(completeMinCharge[i + j*int(iterations)])
             temp4.append(defectSpots[i + j*int(iterations)])
             
@@ -586,9 +585,14 @@ for p in range(0, int(len(elements)/numOfElements)):
                 # Subtract Energy From "Added" Element
                 if(temp4[j] == elementNamesSeperate[k]):
                     N_i = defectSites[k]
+                                                    
+            Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (kT)))
             
-            Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (k*T)))
-            
+            if(float(config['testfe']) == float("{:0.4f}".format(fermiEnergies[i]))):
+                print("charge state of defect", j, "=", q_i)
+                print("degeneracy states of defect", j, "=", N_i)
+                print("formation energy of defect", j, "=", temp1[j])
+                print()
         
         qArray.append(Q)
                 
@@ -598,9 +602,14 @@ for p in range(0, int(len(elements)/numOfElements)):
             sign1 = False
         
         if(i != 0 and sign2 != sign1):
-            print("Intrinisc Fermi Defect Level: " + str(temp2) + " eV")
+            print()
+            print("Intrinisc Fermi Defect Level: " + "{:0.4f}".format(temp2) + " eV")
+            print()
             qValue = temp2
-            break
+                    
+        if(config["testfe"] == float("{:0.4f}".format(fermiEnergies[i]))):
+            print("Q value =", Q)
+            print()
         
         sign2 = sign1
         
@@ -641,11 +650,6 @@ for p in range(0, int(len(elements)/numOfElements)):
     oldElement = " "
     
     colorName = []
-
-    # Clear Graph Values
-    graphValues = []
-    minCharge = []
-    count = 0
  
     del (elementNames, elementEPA, completeGraph, namesArray)
 
@@ -654,5 +658,5 @@ del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameC
     saveLocation, stepSize, storedName, m, n, q, forGraph, sortedData, correction, charge, count, energy, fermiEnergies,
     finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms, allDev, delV, oldIndex, newIndex, p, minDistance,
     completeMinCharge,  defectSpots, e, factor, forCharge, graphValues, minCharge, N_i, oldElement, oldQ, Q, q_i, qArray,
-    sign1, sign2, tempChargeArray, temp1, temp2, temp3, T)
+    sign1, sign2, tempChargeArray, temp1, temp2, temp3, kT)
 

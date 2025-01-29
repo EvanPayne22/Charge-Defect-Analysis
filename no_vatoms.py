@@ -29,6 +29,8 @@ parser.add_argument("-ymin", nargs='?', type=float, default = -7, help="ymin for
 parser.add_argument("-xmin", nargs='?', type=float, default = 0, help="xmin for defect graph")
 parser.add_argument("-testfe", nargs='?', type=float, default = -1, help="displayes Q information at specified fermi energy")
 parser.add_argument("-hse", nargs=2, type=float, help="enter in values for band gap and VBM for HSE calculation to generate PBE 'prediction'")
+parser.add_argument("-kT", nargs='?', type=float, default = 0.05, help="kT value")
+parser.add_argument("-printQ", nargs='?', type=bool, default = False, help="prints Q values of all defects at intrinsic fermi level")
 parser.add_argument("bg", type=float, help="Band Gap")
 parser.add_argument("vbm", type=float, help="VBM Offset")
 parser.add_argument("resen", nargs='+', type=float, help="energy per atom of bulk atoms in same order as yaml file")
@@ -381,6 +383,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     plt.xlim(xlimmin, xlimmax)
     plt.ylim(ylimmin, ylimmax)
     
+    print("")
     
     temp1 = []
     temp2 = 0
@@ -392,7 +395,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     Q1 = 0
     oldQ = -1
     oldQ1 = -1
-    kT = 0.05
+    kT = config['kT']
     e = 2.718
     qArray = []
     #Determines intrinsic fermi level of defects
@@ -419,7 +422,7 @@ for p in range(0, int(len(elements)/numOfElements)):
                 print("formation energy of defect", j, "=", temp1[j])
                 print()
         
-        qArray.append(Q)
+            qArray.append(Q)
                 
         if(Q > 0):
             sign1 = True
@@ -430,6 +433,15 @@ for p in range(0, int(len(elements)/numOfElements)):
             print()
             print("Intrinisc Fermi Defect Level: " + "{:0.4f}".format(temp2) + " eV")
             print()
+            if(config['printQ']):
+                tempQ = 0 
+                for k in range(0, numberOfDefects):
+                    tempQ = qArray[k] - tempQ
+                    print("Q value of defect", k, "=", tempQ)
+                print("")
+                print("Total Q Value =", Q)
+                print("")
+                del(tempQ)
             qValue = temp2
                     
         if(config["testfe"] == float("{:0.4f}".format(fermiEnergies[i]))):

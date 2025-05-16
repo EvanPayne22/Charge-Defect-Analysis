@@ -487,6 +487,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     tempArray = [] 
     forGraph = []
     forCharge = []
+    tempChargeArray = []
     
     qw = 0
     feColor = ""

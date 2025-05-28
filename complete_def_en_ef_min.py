@@ -91,7 +91,7 @@ reservoirEnergies = config["resen"]
 #-1.84406847/2, -5.51085172/8, -7.89207833/2
 
 colors = ["red", "green", "blue", "orange"]
-lineStyles = ["solid", (0, (5, 7)), "dotted", "dashed"]
+lineStyles = ["solid", (0, (5, 7)), "dotted", "dashdot", "dashed"]
 E_f = config['vbm'] # Fermi Energy (eV)
 gap = config['bg'] # Band Gap (eV)
 

@@ -16,6 +16,8 @@ import yaml
 import argparse
 import math
 
+
+#The lines below are tags for different settings and required arguments
 parser = argparse.ArgumentParser(description="Arguments for charge defect ",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-plotsingledefect", nargs='?', type=bool, default = False, help="plots the vAtoms plots")
@@ -44,6 +46,7 @@ parser.add_argument("resen", nargs='+', type=float, help="energy per atom of bul
 args = parser.parse_args()
 config = vars(args)
 
+#This sets the limit for the charge neutrality plot to band gap as a default value
 if(config['xmax'] == -3):
     config['xmax'] = config['bg']
 
@@ -68,6 +71,9 @@ finalFile = pd.read_csv(config["correction"])
 with open(config["chempot"], 'r') as file:
     data2 = yaml.safe_load(file)
 
+
+#This reads in a POSCAR from the directory, this should include information on all of the possible atom sites as well as atom names
+#Example is given in the repository
 poscar = config["poscar"]
 
 f = open(poscar)
@@ -90,11 +96,13 @@ for i in range(0, len(defectSites)):
 reservoirEnergies = config["resen"]
 #-1.84406847/2, -5.51085172/8, -7.89207833/2
 
+#This is a list of oclors and line styles used for the charge neutrailty plot, colors and styles could be added/subtracted from arrays below
 colors = ["red", "green", "blue", "orange"]
 lineStyles = ["solid", (0, (5, 7)), "dotted", "dashdot", "dashed"]
 E_f = config['vbm'] # Fermi Energy (eV)
 gap = config['bg'] # Band Gap (eV)
 
+#This determines if the hse tag was set to T/F and adjusts calues accordingly
 if(config["hse"] != None):
     originalVBM = E_f
     originalGap = gap
@@ -103,21 +111,23 @@ if(config["hse"] != None):
     gap = config["hse"][0]
     
     config['xmax'] = gap
-    
+
+#This is the number of steps (or the level of detail) for the charge neutrality plot
 stepSize = 0.0001 # Size of Fermi Energy Step (eV)
 iterations = gap/stepSize
 
-graphValues = []
-minCharge = []
-fermiEnergies = []
-# For graph of all defects on one plot
+#Declaration of arrays for charge neutrality plot
+graphValues = [] #Values stored for plot, used as a temp to analyze lowest energy charge state
+minCharge = [] #Array that stores the minimum charge at given "fermi energy"
+fermiEnergies = [] #Array that contains "x" values, based on the number of steps set above
 
-# Plot Settings
+# Plot Settings - set with tags shown above
 ylimmax = config['ymax']
 ylimmin = config['ymin']
 xlimmax = config['xmax']
 xlimmin = config['xmin']
 
+#Array declarations to read in energies_correction file.
 column1 = []
 column2 = []
 column3 = []
@@ -128,9 +138,10 @@ allDev = [0]
 #sets delta V for bulk to 0, note: bulk must be in first slot otherwise formatting will be messed up
 excelFile = [0]
 
-nameTracker = -1
-start = 0
-last10 = 0
+#This section calculates the correction values needed to account for the assumed gaussian decay
+nameTracker = -1 #Used to read defect name
+start = 0 #Starting line value which changes after a new defect is being read in the vAtoms output file
+last10 = 0 #Variable used to average out the "last 10" atoms furthest from defect. This won't be the last 10 depending on the value set in tags
 while(start <= len(data) - 2):
     j = start + 1
     
@@ -162,7 +173,7 @@ while(start <= len(data) - 2):
             standardDeviation.append(float(sortedData.iloc[i,1]))
             i = i + 1
         
-        delV = last10/i
+        delV = last10/i #Averaing the deviation of the furthest atoms to determine correction value
     else:
         value = config["number"] - 1
         minDistance = float(sortedData.iloc[value,0])
@@ -175,8 +186,7 @@ while(start <= len(data) - 2):
         
         delV = last10/config["number"]
     
-    #Everything here is used to plot/save the plot
-    
+    #Everything here is used to plot/save the vatoms plot if plotvatoms tag is set
     if(config["plotvatoms"] == True):
         
         plt.figure(figsize=(10,6))
@@ -227,6 +237,7 @@ while(start <= len(data) - 2):
     
     allDev.append(np.std(standardDeviation))
        
+    #Appending correction values to array and then clearing the columns to calculate for other defects
     excelFile.append(delV)
     column1 = []
     column2 = []
@@ -266,7 +277,7 @@ for i in range(1, len(finalFile)):
     charges.append(float(charge))
     defectNames.append(newName)
 
-#Formats data into one file
+#Formats data into one file titled "energies_final.csv"
 finalFile = finalFile.drop(finalFile.columns[0], axis = 1)
 finalFile.insert(0, "Defect Name", defectNames, True)
 finalFile.insert(1, "Charge", charges, True)    
@@ -297,12 +308,14 @@ def format_label(label):
     base, subscript = label.split('_')
     return f"{base}$_{{{subscript}}}$"
 
+#Counters used for reading yaml file
 counter1 = 0
 counter2 = 0    
 
-elements = []
-chemPot = []
+elements = [] #Element names in yaml file, should match the POSCAR given above
+chemPot = [] #Stores the delta mu values needed to solve for chemical stability
 
+#Reading yaml file to determine chemical potential values for each element
 for x in data2:
     if (counter1 > 0):
         for y in data2[x]:
@@ -316,15 +329,17 @@ for x in data2:
     
 del (x, y, z, counter1, counter2)    
 
-numOfElements = 0
-tempArray = []
-tempValue = 0
-allValues = []
-allCharges = []
-colorName = []
-degenArray = []
-finalColorNames = []
+#Declartion of variables/arrays fro charge neutrality plot
+numOfElements = 0 #Counts the number of "unique" elements
+tempArray = [] #Used to calculate number of elements
+tempValue = 0 #Used to calculate number of elements
+allValues = [] #Stores all of the defect formation energies calculated below at each fermi level
+allCharges = [] #Stores the charge state for each fermi level and defect
+colorName = [] #Used to keep color coding for the plot
+degenArray = [] #Array that stores the number of degeneracy states in supercell/primitive cell
+finalColorNames = [] #Used to keep color coding for the plot
 
+#Determing the number of unique elements
 for i in range (0,len(elements)):
     for j in range (0, len(tempArray)):
         if(tempArray[j] == elements[i]):
@@ -336,12 +351,13 @@ numOfElements = len(tempArray)
 
 del (i, j, tempArray, tempValue)
 
+#Large for loop that will calculate charge neutrality of system based on given chemical potential points given in .yaml file
 for p in range(0, int(len(elements)/numOfElements)):
-    oldIndex = 0
+    oldIndex = 0 #Used to determine when charge state switches accross fermi levels
     elementNames = []
-    elementEPA = []
+    elementEPA = [] #Stores energy needed to add/subtract specific atom from defect
     
-    lineStyleCount = []
+    lineStyleCount = [] #Used to ensure that all of the same color lines gave different line styles
     for i in range (0, len(colors)):
         lineStyleCount.append(0)
     
@@ -351,11 +367,12 @@ for p in range(0, int(len(elements)/numOfElements)):
     
     print(elementNames)
     print(elementEPA)
-    
-    completeGraph = []
-    namesArray = []
-    completeMinCharge = []
-    defectSpots = []
+
+    #Declaration of arrays for charge neutrality plot
+    completeGraph = [] #Stores defect energies for all of the defects across the fermi energies
+    namesArray = [] #Stores the names of the defects
+    completeMinCharge = [] #Stores minimum charge state for all of the defects across the fermi energies
+    defectSpots = [] #Number of locations for a specific defect 
     
     for i in range (1, len(energies_final)):
         bulkDefectEnergy = float(energies_final.iloc[i,2])
@@ -363,17 +380,17 @@ for p in range(0, int(len(elements)/numOfElements)):
         defectName = energies_final.iloc[i,0]
         
         j = 0
-        firstElement = ""
-        secondElement = ""
+        firstElement = "" #stores the name of the first/added "element" in defect
+        secondElement = "" #stores the name of the second/removed "second" in defect
         
-        # Gets the name of the first element
+        # Gets the name of the first/added element
         while(defectName[j] != "_"):
             firstElement = firstElement + defectName[j]
             j = j + 1
             
         j = j + 1
         
-        # Gets the name of the second element
+        # Gets the name of the second/removed element
         while(j != len(defectName)):
             secondElement = secondElement + defectName[j]
             j = j + 1
@@ -383,7 +400,7 @@ for p in range(0, int(len(elements)/numOfElements)):
         
         finalDefectEnergy = bulkDefectEnergy - bulkEnergy 
         
-        # Calculates 
+        # Calculates the defect energy at specific charge state
         for k in range(0, len(elementNames)):
             # Subtract Energy From "Added" Element
             if(firstElement == elementNames[k]):
@@ -397,13 +414,14 @@ for p in range(0, int(len(elements)/numOfElements)):
         correction = float(energies_final.iloc[i, 3])
         
         if(storedName != defectName and i != 1):
-             tempArray = []
-             tempChargeArray = []
-             forGraph = []
-             forCharge = []
+             #Temp Array Declarations all needed for the charge neutrality plot
+             tempArray = [] #Temp for charge states
+             tempChargeArray = [] #Temp for charge states
+             forGraph = [] #Temp for defect energies, merges tempArray
+             forCharge = [] #Temp for charge states, merges tempChargeArray
              
-             qw = 0
-             feColor = ""
+             qw = 0 #used as a temp to determine color for plot
+             feColor = "" #used as a temp to determine color for plot
              while(storedName[qw] != "_"):
                  feColor = feColor + storedName[qw]
                  qw += 1
@@ -448,7 +466,7 @@ for p in range(0, int(len(elements)/numOfElements)):
                  tempArray = []
                  tempChargeArray = []
                 
-             #Plots the individual charge defect plots
+             #Plots the individual charge defect plots, contains all of the charge states for an individual defect spanned across entire band gap
              if(config["plotsingledefect"] == True): 
                  formattedTitle = format_label(str(storedName))
                  plt.figure(figsize=(10,6))
@@ -488,7 +506,8 @@ for p in range(0, int(len(elements)/numOfElements)):
     forGraph = []
     forCharge = []
     tempChargeArray = []
-    
+
+    #Everything below repeats above for the last defect, until noted
     qw = 0
     feColor = ""
     while(storedName[qw] != "_"):
@@ -532,12 +551,13 @@ for p in range(0, int(len(elements)/numOfElements)):
         completeMinCharge.append(forCharge[m])
         tempArray = []
         tempChargeArray = []
-
+    # This is the last of the repeated analysis
+  
     # This plots the last individual defect
     plt.figure(figsize=(10,6))
     storedName = defectName
     namesArray.append(storedName)
-    
+
     if(config["plotsingledefect"] == True): 
         formattedTitle = format_label(str(storedName))
         plt.title("Defect Plot of " + formattedTitle)
@@ -560,20 +580,18 @@ for p in range(0, int(len(elements)/numOfElements)):
     plt.ylim(ylimmin, ylimmax)
     
     print("")
-    
-    temp1 = []
-    temp2 = 0
-    temp3 = []
-    temp4 = []
-    sign1 = False
-    sign2 = False
-    Q = 0
-    Q1 = 0
-    oldQ = -1
-    oldQ1 = -1
-    kT = config['kT']
-    e = 2.718
-    qArray = []
+
+    #Below contains calculations to determine the charge neutrality of the system
+    temp1 = [] #Contains the defect energy of each defect at each fermi energy
+    temp2 = 0 #currect fermi energy being analyzed
+    temp3 = [] #Contains the minimum charge states
+    temp4 = [] #Contains the number of possible degeneracy states for the type of defect, obtained from original POSCAR
+    sign1 = False #Temps used to determine if the charge of the whole system flips
+    sign2 = False #Temps used to determine if the charge of the whole system flips
+    Q = 0 #Temps used to determine if the charge of the whole system flips
+    kT = config['kT'] #specfied boltzmann * temp value
+    e = 2.718 #exp value
+    qArray = [] #stores all Q values, and is used to see if charge of system changes
     #Determines intrinsic fermi level of defects
     for i in range(0, int(iterations)):
         qArray = []
@@ -590,7 +608,7 @@ for p in range(0, int(len(elements)/numOfElements)):
                 if(temp4[j] == elementNamesSeperate[k]):
                     N_i = defectSites[k]
                                                     
-            Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (kT)))
+            Q = Q + N_i*q_i*(e**(-1 * float(temp1[j]) / (kT))) #Calculates total Q value at fermi energy
             
             if(float(config['testfe']) == float("{:0.4f}".format(fermiEnergies[i]))):
                 print("charge state of defect", j, "=", q_i)
@@ -665,7 +683,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     colorName = []
  
     del (elementNames, elementEPA, completeGraph, namesArray)
-
+#removes unneccesary variables to make it easier to read values on spyder or other ide
 del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameCharge, tempData, tempArray, f, parser,
     V, xlimmax, xlimmin, ylimmax, ylimmin, standardDeviation, secondElement, firstElement, formatted_labels, file,
     saveLocation, stepSize, storedName, m, n, q, forGraph, sortedData, correction, charge, count, energy, fermiEnergies,

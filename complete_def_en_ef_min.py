@@ -592,6 +592,7 @@ for p in range(0, int(len(elements)/numOfElements)):
     kT = config['kT'] #specfied boltzmann * temp value
     e = 2.718 #exp value
     qArray = [] #stores all Q values, and is used to see if charge of system changes
+    qValue = 0 #fermi energy value stored to print when sign changes
     #Determines intrinsic fermi level of defects
     for i in range(0, int(iterations)):
         qArray = []
@@ -688,6 +689,6 @@ del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameC
     V, xlimmax, xlimmin, ylimmax, ylimmin, standardDeviation, secondElement, firstElement, formatted_labels, file,
     saveLocation, stepSize, storedName, m, n, q, forGraph, sortedData, correction, charge, count, energy, fermiEnergies,
     finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms, allDev, delV, oldIndex, newIndex, p, minDistance,
-    completeMinCharge,  defectSpots, e, factor, forCharge, graphValues, minCharge, N_i, oldElement, oldQ, Q, q_i, qArray,
+    completeMinCharge,  defectSpots, e, factor, forCharge, graphValues, minCharge, N_i, oldElement, Q, q_i, qArray,
     sign1, sign2, tempChargeArray, temp1, temp2, temp3, kT)
 

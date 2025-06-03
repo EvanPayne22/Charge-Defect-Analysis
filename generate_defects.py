@@ -19,6 +19,7 @@ poscar = r"./POSCAR"
 f = open(poscar)
 POSCAR = f.readlines()
 
+#Function used to produce POSCAR with defect
 def outputFile(tempPOSCAR, addedElement, subbedElement):
     tempString = ""
     
@@ -42,6 +43,7 @@ def outputFile(tempPOSCAR, addedElement, subbedElement):
     
     return tempPOSCAR
 
+#Function which generates a POSCAR with a centrally located Vacancy
 def makeVac(lineNumber, poscar, subbedElement):
     
     tempPOSCAR = poscar.copy()
@@ -68,6 +70,7 @@ def makeVac(lineNumber, poscar, subbedElement):
 
     return(tempPOSCAR)
 
+#FUnction generates substitutional defects in POSCAR format
 def makeSub(lineNumber, poscar, addedElement, subbedElement):
     
     tempPOSCAR = poscar.copy()
@@ -102,7 +105,8 @@ def makeSub(lineNumber, poscar, addedElement, subbedElement):
     tempPOSCAR = outputFile(tempPOSCAR, atomNames[addedElement], atomNames[subbedElement])
     
     return tempPOSCAR
-    
+
+#Function to translate relative coordinates in the POSCAR to cartesian coordinates
 def convertToCartesian(poscar):
     latticeConstant = float(poscar[1])
     
@@ -127,6 +131,7 @@ def convertToCartesian(poscar):
         
     return(poscar)
     
+#Function to translate cartesian coordinates in the POSCAR to relative coordinates
 def convertToDirect(poscar):
     latticeConstant = float(poscar[1])
     

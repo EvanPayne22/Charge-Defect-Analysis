@@ -41,7 +41,7 @@ if(config['xmax'] == -3):
     config['xmax'] = config['bg']
 
 # Folder Name of Save Location for charge defect plots
-saveFolderNameCharge = "defectAll"
+saveFolderNameCharge = "combinedDefects"
 
 # Creates Folder if it does not exist
 if not os.path.exists(saveFolderNameCharge):
@@ -502,5 +502,5 @@ for p in range(0, int(len(elements)/numOfElements)):
 #removes unneccesary variables to make it easier to read values on spyder or other ide
 del(allCharges, allValues, args, bb, bulkDefectEnergy, chemPot, colNum, colorName, colors, completeMinCharge, config, correction, count, data2, defectName, defectSites, defectSpots, e, 
     elementNamesSeperate, elements, energies_final, energy, f, factor, fermiEnergies, file, finalColorNames, finalDefectEnergy, firstElement, forCharge, forGraph, 
-    formatted_labels, graphValues, i, iterations, j, k, lineStyleCount, lineStyles, m, minCharge, n, N_i, newIndex, numOfElements, oldElement, oldIndex, oldQ, oldQ1, p, parser, poscar, POSCAR, q, Q, Q1, q_i,
+    formatted_labels, graphValues, i, iterations, j, k, lineStyleCount, lineStyles, m, minCharge, n, N_i, newIndex, numOfElements, oldElement, oldIndex, p, parser, poscar, POSCAR, q, Q, q_i,
     qValue, qArray, saveFolderNameCharge, saveLocation, secondElement, sign1, sign2, storedName, kT, temp1, temp2, temp3, temp4, tempArray, tempChargeArray, tempData, V, xlimmax, xlimmin, ylimmax, ylimmin)

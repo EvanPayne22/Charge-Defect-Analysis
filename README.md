@@ -1,20 +1,39 @@
-This repository contains codes to generate defects in photovoltaic materials and generate charge transition defect plots that include correction energies.
-Some external codes that will be needed are sxdefectalign by Christoph Freysoldt which will be used to calculate the correction energies. Another program that may be needed is pydefect. Pydefect is used to create chemical stability plots but if you generate yours in a different way then you can manually enter the values into def_en_ef_all.py/def_en_ef_min.py. Or you can follow the same format as the .yaml file included in the repository and use complete_def_en_ef_min.py which is more efficient.
+# Charge Defect Analysis
 
-The first step is to create the POSCAR of the material you are looking at or take a preexisting POSCAR from Materials Project. I would recommend making a supercell, the needed size will depend on the material but at least a 64-atom cell is recommended. 
+This repository is designed to aid in the preparation of VASP input files for analyzing charge defects in materials. The ultimate goal is to determine the intrinsic Fermi energy at which the system becomes charge neutral.
 
-Relax the lattice vectors of the POSCAR by using ISIF = 3 and keep the lattice constant for the rest of the calculations. This step is required when using sxdefectalign.
+To fully utilize this repository, you will need to download the script `sxdefectalign`, written by Christopher Freysoldt. This tool is used to calculate correction terms related to the periodic boundary conditions in VASP simulations. It also accounts for the long-range electrostatic potentials assumed to follow a Gaussian distribution.
 
-Note: ALL runs including charge states REQUIRE LOCPOT files, which can be generated with the tag LVTOT = T.
+Another helpful package is `pydefect`, which provides useful tools for determining the chemical potentials of the constituent elements. However, this step can be skipped as long as your potential file follows the same format as shown below.
 
-After the initial relaxation is done, the CONTCAR should be used as the POSCAR for the defects. Once the CONTCAR is renamed you can use the generate_defects.py to generate all internal vacancies and substitution defects. As a note if you generate your own defected POSCARS then the location of the defect will need to be written to the top of the neutral charge state defect. This step is automatically done when using my code.
+## generate_defects.py
+### Description
 
-Note: generate_defects.py does not take into account nearest neighbors so if you are attempting to look at specific locations then the defects will need to be personally generated.
+### Input Files
 
-After the neutral charge defects are created do your initial relaxations. Once those are complete you can run the charged defect states by using the charge_defect_generator.sh. Just enter the name of the defect's directory where specified and enter the desired charge states. Skip the 0 charge state since that run is already completed. To determine which charge states are needed you can look at the neutral charge states EIGENVAL file. The defect bands will give a good idea of possible charge states. If a defect band has an occupancy of 0 then this means that the material could hold and additional 2 electrons (a -2 charge state). If instead the occupancy is 1 then the material could lose two electrons meaning a +2 charge state. It is always good practice to go +-1 charge states in addition to the ones that seem possible in the EIGENVAL file.
+## charge_defect_generator.sh
+### Description
 
-Once all of the charge state defects are done return to the directory that contains all of the defects. Use the run_sxdefectalign_code.sh to run sxdefectalign for all charge states. Make sure to change all the required variables in the file. This includes the location of the bulk material with the LOCPOT file and the dielectric tensor of the bulk material.
+### Input Files
 
-After the sxdefectalign files are generated use the make_vAtoms_output.sh to generate a necessary file. Also, move a POSCAR and the target_vertices.yaml file into the directory. Once this is completed then the complete_def_en_ef_min.py file can be run. Use the -help command to know all the required info and other tags that can be used. The only thing to note is that the -resen tag follows the same order as the target_vertices.yaml file. And the values required for that are the reservoir energies (bulk energy per atom) of each of the atoms that are being "added" and "subtracted" in the defects. 
+## run_sxdefectalign_code.sh
+### Description
 
-As I mentioned earlier if you would rather not use the .yaml file you can use the vAtome_code.py file and def_en_ef_min.py file to generate the same plots after manually entering in some of the data. All required data is listed at the top of each file. And the def_en_ef_all.py generates plots that contain all charge states for each defect versus just the minimum which is shown in the complete_def_en_ef_min.py.
+### Input Files
+
+## make_vatoms_output.sh
+### Description
+
+### Input Files
+
+### Sample Plot
+
+## complete_def_en_ef_min.py
+### Description
+
+### Input Files
+
+## no_vatoms.py
+### Description
+
+### Input Files

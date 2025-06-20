@@ -39,6 +39,8 @@ parser.add_argument("-kT", nargs='?', type=float, default = 0.05, help="kT value
 parser.add_argument("-printQ", nargs='?', type=bool, default = False, help="prints Q values of all defects at intrinsic fermi level")
 parser.add_argument("-percent", nargs='?', type=float, default = 0.8, help="value to determine amount of atoms averaged for delta v value using all atoms beyond specifed percent of furthest atom")
 parser.add_argument("-number", nargs='?', type=int, default = -1, help="value to determine amount of atoms averaged for delta v value using the furthest specified number of atoms")
+parser.add_argument("-colors", nargs='+', default=["red", "green", "blue", "orange"], help="color array for charge neutrality plot")
+parser.add_argument("-legloc", nargs='?', default = 8, help="sets the location of the legend in charge neutrality plot")
 parser.add_argument("-hse", nargs=2, type=float, help="enter in values for band gap and VBM for HSE calculation to generate PBE 'prediction'")
 parser.add_argument("bg", type=float, help="Band Gap")
 parser.add_argument("vbm", type=float, help="VBM Offset")
@@ -97,7 +99,7 @@ reservoirEnergies = config["resen"]
 #-1.84406847/2, -5.51085172/8, -7.89207833/2
 
 #This is a list of oclors and line styles used for the charge neutrailty plot, colors and styles could be added/subtracted from arrays below
-colors = ["red", "green", "blue", "orange"]
+colors = config["colors"]
 lineStyles = ["solid", (0, (5, 7)), "dotted", "dashdot", "dashed"]
 E_f = config['vbm'] # Fermi Energy (eV)
 gap = config['bg'] # Band Gap (eV)
@@ -672,7 +674,7 @@ for p in range(0, int(len(elements)/numOfElements)):
                 lineStyleCount[j] = lineStyleCount[j] + 1
     plt.axvline(qValue, color="black", linestyle="dashed")
     colNum = math.ceil(numberOfDefects/7)
-    plt.legend(loc = 8, ncols = colNum)
+    plt.legend(loc = config["legloc"], ncols = colNum)
     saveLocation = saveFolderNameCharge + "/" +  "combinedDefects" +  str(p + 1) + ".png"
     plt.savefig(saveLocation)
     plt.show()
@@ -691,4 +693,3 @@ del(defectName, defect_name, dict, iterations,i, j, k, line_new, saveFolderNameC
     finalDefectEnergy, finalFile, bulkDefectEnergy, saveFolderNameVAtoms, allDev, delV, oldIndex, newIndex, p, minDistance,
     completeMinCharge,  defectSpots, e, factor, forCharge, graphValues, minCharge, N_i, oldElement, Q, q_i, qArray,
     sign1, sign2, tempChargeArray, temp1, temp2, temp3, kT)
-

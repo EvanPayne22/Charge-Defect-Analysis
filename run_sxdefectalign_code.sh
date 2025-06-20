@@ -23,9 +23,10 @@ do
         cd $a
         if [ -f "LOCPOT" ]; then
                 #Gets Defect Location by using location specified in POSCAR header, ex. Supercell of Rb12 I_Sb at 0.4159365 0.6027021   0.4107527  
+                rm results.txt
                 string=${a: -3}
                 nonChargeDefect="${a: 0 : -3}""${string//[0-9\/-]/}"0
-                defectLocation=$(head -1 "../$nonChargeDefect/POSCAR" | awk '{print $3 "," $4 "," $5}')
+                defectLocation=$(head -1 "../$nonChargeDefect/POSCAR" | awk '{print $1 "," $2 "," $3}')
                 charge=$(echo "$string" | tr -cd '0-9-')
                 # Check if the charge is negative
                 if [ "${charge:0:1}" = "-" ]; then
@@ -42,7 +43,7 @@ do
                 results=$(tail -1 "results.txt" | awk '{print $4}')
 
                 echo "$a, $free_en, $results" >> ../energies_correction.csv
-                #rm results.txt
+                
         fi
         cd ..
 done

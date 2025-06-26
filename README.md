@@ -45,4 +45,4 @@ python complete_def_en_ef_min.py bandgap_value vbm_value (from EIGENVAL) I1 I2 I
 There are additional tags that can be seen by using:
 python complete_def_en_ef_min.py -help
 ### Sample Plot
-
+<img src="images/pberesult.png" alt="Charge Neutrality Plot" width="400"/>
